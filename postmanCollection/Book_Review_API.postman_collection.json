@@ -1,0 +1,1215 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "📚 Book Review API",
+		"description": "A comprehensive RESTful API for managing books and reviews with JWT authentication.\n\n## 🚀 Quick Start\n\n1. Set up environment variables in Postman\n2. Run the \"User Registration\" request\n3. Copy the token and set it in environment variables\n4. Explore other endpoints!\n\n## 🔐 Authentication\n\nMost endpoints require JWT token in Authorization header:\n`Bearer {{token}}`\n\n## 📋 Environment Variables\n\nMake sure to set these variables:\n- `baseUrl`: http://localhost:5000\n- `token`: Your JWT token (auto-updated after login)\n- `userId`: Your user ID (auto-updated after login)\n- `bookId`: A book ID for testing\n- `reviewId`: A review ID for testing\n\nCreated by: Book Review API Team\nVersion: 1.0.0\nDocumentation: https://github.com/yourusername/book-review-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "User Registration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test response status",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Test response structure",
+									"pm.test(\"Response has required fields\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson.data).to.have.property('user');",
+									"    pm.expect(responseJson.data).to.have.property('token');",
+									"});",
+									"",
+									"// Auto-set token and userId for subsequent requests",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('token', responseJson.data.token);",
+									"    pm.environment.set('userId', responseJson.data.user._id);",
+									"    ",
+									"    console.log('✅ Token and User ID automatically set in environment');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate random user data for testing",
+									"const timestamp = Date.now();",
+									"pm.environment.set('randomUsername', `testuser${timestamp}`);",
+									"pm.environment.set('randomEmail', `test${timestamp}@example.com`);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{randomUsername}}\",\n  \"email\": \"{{randomEmail}}\",\n  \"password\": \"SecurePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						},
+						"description": "Register a new user account.\n\n**Required Fields:**\n- username (3-20 chars, alphanumeric + underscore)\n- email (valid email format)\n- password (min 6 chars, must contain uppercase, lowercase, and number)\n\n**Response:**\n- User object (without password)\n- JWT token for authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "User Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test response status",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Test response structure",
+									"pm.test(\"Response has required fields\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('user');",
+									"    pm.expect(responseJson.data).to.have.property('token');",
+									"});",
+									"",
+									"// Auto-set token and userId",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('token', responseJson.data.token);",
+									"    pm.environment.set('userId', responseJson.data.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{randomEmail}}\",\n  \"password\": \"SecurePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate user and receive JWT token.\n\n**Required Fields:**\n- email\n- password\n\n**Response:**\n- User object\n- JWT token (expires in 7 days)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User data is returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('_id');",
+									"    pm.expect(responseJson.data).to.have.property('username');",
+									"    pm.expect(responseJson.data).to.have.property('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get current authenticated user's information.\n\n**Authentication:** Required (Bearer token)\n\n**Response:**\n- Current user data"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, and profile management."
+		},
+		{
+			"name": "📚 Books Management",
+			"item": [
+				{
+					"name": "Add New Book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Book created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('_id');",
+									"    pm.expect(responseJson.data).to.have.property('title');",
+									"});",
+									"",
+									"// Auto-set bookId for subsequent requests",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('bookId', responseJson.data._id);",
+									"    console.log('✅ Book ID automatically set:', responseJson.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"The Great Gatsby\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"genre\": \"Classic Literature\",\n  \"description\": \"A classic American novel set in the summer of 1922 in the fictional town of West Egg on prosperous Long Island and in New York City. The story follows the mysterious Jay Gatsby and his obsession with the beautiful Daisy Buchanan.\",\n  \"isbn\": \"978-0-7432-7356-5\",\n  \"publishedYear\": 1925\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/books",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							]
+						},
+						"description": "Add a new book to the collection.\n\n**Authentication:** Required\n\n**Required Fields:**\n- title (1-200 chars)\n- author (1-100 chars)\n- genre (1-50 chars)\n- description (10-1000 chars)\n\n**Optional Fields:**\n- isbn (valid ISBN format)\n- publishedYear (1000 to current year)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Books list returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Pagination info present\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('count');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Items per page (default: 10, max: 50)"
+								},
+								{
+									"key": "author",
+									"value": "",
+									"description": "Filter by author name",
+									"disabled": true
+								},
+								{
+									"key": "genre",
+									"value": "",
+									"description": "Filter by genre",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all books with pagination and optional filters.\n\n**Query Parameters:**\n- page: Page number (default: 1)\n- limit: Items per page (default: 10, max: 50)\n- author: Filter by author name (case-insensitive)\n- genre: Filter by genre (case-insensitive)\n\n**Response:**\n- Array of books with average ratings\n- Pagination information"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Books with Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Filtered results returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?author=fitzgerald&genre=classic&page=1&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "author",
+									"value": "fitzgerald"
+								},
+								{
+									"key": "genre",
+									"value": "classic"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Example of filtering books by author and genre."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Book with Reviews",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Book details returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('_id');",
+									"    pm.expect(responseJson.data).to.have.property('title');",
+									"    pm.expect(responseJson.data).to.have.property('reviews');",
+									"});",
+									"",
+									"pm.test(\"Average rating calculated\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('averageRating');",
+									"    pm.expect(responseJson.data).to.have.property('totalReviews');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books/{{bookId}}?page=1&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books",
+								"{{bookId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for reviews"
+								},
+								{
+									"key": "limit",
+									"value": "5",
+									"description": "Reviews per page"
+								}
+							]
+						},
+						"description": "Get detailed information about a specific book including:\n- Book details\n- Average rating\n- Total reviews count\n- Paginated reviews\n\n**Path Parameters:**\n- id: Book ID (MongoDB ObjectId)\n\n**Query Parameters:**\n- page: Page number for reviews\n- limit: Reviews per page"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('query');",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/search?q=gatsby&page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "gatsby",
+									"description": "Search query (title or author)"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search books by title or author.\n\n**Query Parameters:**\n- q: Search query (required, 1-100 chars)\n- page: Page number\n- limit: Results per page\n\n**Features:**\n- Case-insensitive search\n- Partial matching\n- Searches both title and author fields"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing books - create, read, search, and filter books."
+		},
+		{
+			"name": "⭐ Reviews Management",
+			"item": [
+				{
+					"name": "Add Review to Book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Review created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('_id');",
+									"    pm.expect(responseJson.data).to.have.property('rating');",
+									"    pm.expect(responseJson.data).to.have.property('comment');",
+									"});",
+									"",
+									"// Auto-set reviewId for subsequent requests",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('reviewId', responseJson.data._id);",
+									"    console.log('✅ Review ID automatically set:', responseJson.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 5,\n  \"comment\": \"An absolutely masterful exploration of the American Dream and the decadence of the Jazz Age. Fitzgerald's prose is both beautiful and haunting, creating characters that feel incredibly real despite their larger-than-life circumstances. The symbolism throughout the novel is profound, particularly the green light at the end of Daisy's dock. This book captures the essence of an era while telling a timeless story about love, obsession, and the corruption of ideals. A true classic that deserves its place in American literature.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/books/{{bookId}}/reviews",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books",
+								"{{bookId}}",
+								"reviews"
+							]
+						},
+						"description": "Add a review for a specific book.\n\n**Authentication:** Required\n\n**Path Parameters:**\n- id: Book ID\n\n**Required Fields:**\n- rating (1-5 stars)\n- comment (10-500 chars)\n\n**Constraints:**\n- One review per user per book\n- User must be authenticated"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Own Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Review updated successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('updatedAt');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 4,\n  \"comment\": \"Upon re-reading this classic, I still find it to be a powerful critique of the American Dream, though I noticed some pacing issues in the middle chapters that I didn't catch before. Fitzgerald's writing is undeniably beautiful, and the character development is strong, but the story sometimes feels a bit slow. Still a very important work of American literature that offers valuable insights into the 1920s era and human nature in general.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"{{reviewId}}"
+							]
+						},
+						"description": "Update your own review.\n\n**Authentication:** Required\n**Authorization:** Only review owner can update\n\n**Path Parameters:**\n- id: Review ID\n\n**Fields:**\n- rating (1-5 stars)\n- comment (10-500 chars)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Review details returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.have.property('_id');",
+									"    pm.expect(responseJson.data).to.have.property('bookId');",
+									"    pm.expect(responseJson.data).to.have.property('userId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"{{reviewId}}"
+							]
+						},
+						"description": "Get details of a specific review.\n\n**Path Parameters:**\n- id: Review ID\n\n**Response:**\n- Review details with populated book and user info"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Reviews",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User reviews returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/user/{{userId}}?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"user",
+								"{{userId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all reviews by a specific user.\n\n**Path Parameters:**\n- userId: User ID\n\n**Query Parameters:**\n- page: Page number\n- limit: Reviews per page"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Own Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Review deleted successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.message).to.include('deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"{{reviewId}}"
+							]
+						},
+						"description": "Delete your own review.\n\n**Authentication:** Required\n**Authorization:** Only review owner can delete\n\n**Path Parameters:**\n- id: Review ID\n\n⚠️ **Warning:** This action cannot be undone!"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing book reviews - create, read, update, and delete reviews."
+		},
+		{
+			"name": "🔍 Advanced Examples",
+			"item": [
+				{
+					"name": "Complete Workflow Test",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// This demonstrates a complete workflow",
+									"console.log('🔄 Starting complete workflow test...');",
+									"console.log('1. This will create a user');",
+									"console.log('2. Login with that user');", 
+									"console.log('3. Add a book');",
+									"console.log('4. Add a review');",
+									"console.log('5. Search for the book');",
+									"",
+									"// Generate unique data",
+									"const timestamp = Date.now();",
+									"pm.environment.set('workflowUsername', `workflow${timestamp}`);",
+									"pm.environment.set('workflowEmail', `workflow${timestamp}@test.com`);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Workflow completed successfully\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"console.log('✅ Complete workflow test finished!');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "This is a demonstration endpoint that shows the complete workflow.\n\nTo run the complete workflow:\n1. Run 'User Registration'\n2. Run 'Add New Book'\n3. Run 'Add Review to Book'\n4. Run 'Search Books'\n5. Run 'Get Single Book with Reviews'"
+					},
+					"response": []
+				},
+				{
+					"name": "Error Handling - Invalid Book ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', false);",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books/invalid-id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books",
+								"invalid-id"
+							]
+						},
+						"description": "Test error handling with invalid MongoDB ObjectId format."
+					},
+					"response": []
+				},
+				{
+					"name": "Error Handling - Unauthorized Access",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Unauthorized error message\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', false);",
+									"    pm.expect(responseJson.message).to.include('authorized');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test Book\",\n  \"author\": \"Test Author\",\n  \"genre\": \"Test Genre\",\n  \"description\": \"This should fail due to missing authentication\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/books",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							]
+						},
+						"description": "Test authentication requirement - this should fail without Bearer token."
+					},
+					"response": []
+				},
+				{
+					"name": "Error Handling - Validation Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation error structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', false);",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\",\n  \"author\": \"Test Author\",\n  \"genre\": \"Test Genre\",\n  \"description\": \"Short\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/books",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							]
+						},
+						"description": "Test validation error handling with invalid data (empty title, short description)."
+					},
+					"response": []
+				},
+				{
+					"name": "Pagination Test - Large Limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Limit validation error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', false);",
+									"    pm.expect(responseJson.message).to.include('Validation');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100",
+									"description": "Should fail - max limit is 50"
+								}
+							]
+						},
+						"description": "Test pagination validation - limit exceeds maximum allowed (50)."
+					},
+					"response": []
+				}
+			],
+			"description": "Advanced examples and error handling tests to demonstrate API behavior."
+		},
+		{
+			"name": "🏥 Health & Monitoring",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Health check response\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('message', 'OK');",
+									"    pm.expect(responseJson).to.have.property('uptime');",
+									"    pm.expect(responseJson).to.have.property('timestamp');",
+									"});",
+									"",
+									"pm.test(\"Server is healthy\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.uptime).to.be.a('number');",
+									"    pm.expect(responseJson.uptime).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check server health and uptime.\n\n**Response:**\n- Server uptime\n- Current timestamp\n- Environment information"
+					},
+					"response": []
+				},
+				{
+					"name": "API Welcome",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Welcome response structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson).to.have.property('endpoints');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "API welcome endpoint with documentation overview."
+					},
+					"response": []
+				}
+			],
+			"description": "Health check and monitoring endpoints."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('🚀 API Request:', pm.request.method, pm.request.url);",
+					"",
+					"// Check if baseUrl is set",
+					"if (!pm.environment.get('baseUrl')) {",
+					"    console.warn('⚠️ baseUrl not set in environment variables');",
+					"    pm.environment.set('baseUrl', 'http://localhost:5000');",
+					"}",
+					"",
+					"// Add request timestamp",
+					"pm.environment.set('requestTimestamp', new Date().toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"console.log('📊 Response:', pm.response.status, pm.response.code);",
+					"",
+					"// Test response time",
+					"pm.test('Response time is reasonable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Test response format for successful requests",
+					"if (pm.response.code >= 200 && pm.response.code < 300) {",
+					"    pm.test('Response has JSON content-type', function () {",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"    });",
+					"}",
+					"",
+					"// Log any errors for debugging",
+					"if (pm.response.code >= 400) {",
+					"    console.error('❌ Request failed:', pm.response.json());",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "bookId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reviewId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomUsername",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "randomEmail",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workflowUsername",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workflowEmail",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "requestTimestamp",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
