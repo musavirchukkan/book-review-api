@@ -47,14 +47,19 @@ const updateReview = asyncHandler(async (req, res, next) => {
     const { rating, comment } = req.body;
 
     // Find review
-    let review = await Review.findById(req.params.id);
+    let review = await Review.findById(req.params.id)
+        .select('userId')
+        .lean();
 
     if (!review) {
         return next(new ErrorResponse('Review not found', 404));
     }
 
     // Check if user owns the review
-    if (review.userId.toString() !== req.user.id) {
+    const reviewUserId = review.userId._id ? review.userId._id.toString() : review.userId.toString();
+    const requestUserId = req.user.id;
+
+    if (reviewUserId !== requestUserId) {
         return next(new ErrorResponse('Not authorized to update this review', 403));
     }
 
@@ -76,14 +81,20 @@ const updateReview = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/reviews/:id
 // @access  Private
 const deleteReview = asyncHandler(async (req, res, next) => {
-    const review = await Review.findById(req.params.id);
+    // Find review
+    const review = await Review.findById(req.params.id)
+        .select('userId')
+        .lean();
 
     if (!review) {
         return next(new ErrorResponse('Review not found', 404));
     }
 
     // Check if user owns the review
-    if (review.userId.toString() !== req.user.id) {
+    const reviewUserId = review.userId._id ? review.userId._id.toString() : review.userId.toString();
+    const requestUserId = req.user.id;
+
+    if (reviewUserId !== requestUserId) {
         return next(new ErrorResponse('Not authorized to delete this review', 403));
     }
 
